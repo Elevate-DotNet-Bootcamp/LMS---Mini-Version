@@ -1,6 +1,5 @@
 ﻿using LMS___Mini_Version.DTOs;
 using LMS___Mini_Version.Mapping;
-using LMS___Mini_Version.Domain.Repositories;
 using LMS___Mini_Version.Services.Interfaces;
 using LMS___Mini_Version.ViewModels.Intern;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace LMS___Mini_Version.Controllers
 {
     /// <summary>
-    /// [Trap 1 Fix] Depends on IInternService + IUnitOfWork — NOT AppDbContext.
+    /// [Trap 1 Fix] Depends on IInternService — NOT AppDbContext.
+    /// [SRP Fix] No longer injects IUnitOfWork — the Service owns its own CRUD transactions.
     /// [Trap 2 Fix] Accepts/returns ViewModels only.
     /// [Trap 3 Fix] Fully async.
     /// [Trap 5 Fix] Zero business logic — delegated to InternService.
@@ -18,12 +18,10 @@ namespace LMS___Mini_Version.Controllers
     public class InternController : ControllerBase
     {
         private readonly IInternService _internService;
-        private readonly IUnitOfWork _unitOfWork;
 
-        public InternController(IInternService internService, IUnitOfWork unitOfWork)
+        public InternController(IInternService internService)
         {
             _internService = internService;
-            _unitOfWork = unitOfWork;
         }
 
         [HttpGet]
@@ -55,8 +53,6 @@ namespace LMS___Mini_Version.Controllers
             };
 
             var created = await _internService.CreateAsync(dto).ConfigureAwait(false);
-            await _unitOfWork.CompleteAsync().ConfigureAwait(false);
-
             return Ok(created.ToSummaryViewModel());
         }
 
@@ -75,7 +71,6 @@ namespace LMS___Mini_Version.Controllers
             var updated = await _internService.UpdateAsync(id, dto).ConfigureAwait(false);
             if (!updated) return NotFound();
 
-            await _unitOfWork.CompleteAsync().ConfigureAwait(false);
             return NoContent();
         }
 
@@ -85,7 +80,6 @@ namespace LMS___Mini_Version.Controllers
             var deleted = await _internService.DeleteAsync(id).ConfigureAwait(false);
             if (!deleted) return NotFound();
 
-            await _unitOfWork.CompleteAsync().ConfigureAwait(false);
             return NoContent();
         }
     }

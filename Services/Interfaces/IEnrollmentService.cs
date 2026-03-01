@@ -1,3 +1,4 @@
+using LMS___Mini_Version.Domain.Enums;
 using LMS___Mini_Version.DTOs;
 
 namespace LMS___Mini_Version.Services.Interfaces
@@ -17,5 +18,17 @@ namespace LMS___Mini_Version.Services.Interfaces
         Task<EnrollmentDto> CreateEnrollmentAsync(CreateEnrollmentDto dto);
 
         Task<IEnumerable<EnrollmentDto>> GetByInternAsync(int internId);
+
+        /// <summary>
+        /// Atomic Step: Updates the enrollment status (e.g., Active → Cancelled).
+        /// Staged only — no SaveChanges.
+        /// </summary>
+        Task<bool> UpdateStatusAsync(int enrollmentId, EnrollmentStatus newStatus);
+
+        /// <summary>
+        /// Atomic Step: Moves an enrollment to a different track.
+        /// Staged only — no SaveChanges.
+        /// </summary>
+        Task<bool> UpdateTrackAsync(int enrollmentId, int newTrackId);
     }
 }

@@ -1,3 +1,4 @@
+using LMS___Mini_Version.Domain.Entities;
 using LMS___Mini_Version.Domain.Repositories;
 using LMS___Mini_Version.DTOs;
 using LMS___Mini_Version.Mapping;
@@ -7,23 +8,26 @@ using Microsoft.EntityFrameworkCore;
 namespace LMS___Mini_Version.Services.Implementations
 {
     /// <summary>
-    /// [Trap 3 Fix] Fully async.
-    /// [Trap 4 Fix] Uses IQueryable with Include for DB-side joins.
-    /// [Trap 5 Fix] Single-entity Steps only.
-    /// [Trap 6 Fix] No SaveChanges.
+    /// [SRP Fix] Injects IGeneralRepository&lt;Intern&gt; and IUnitOfWork directly.
+    /// 
+    /// CRUD methods (Create, Update, Delete) call CompleteAsync() internally.
     /// </summary>
     public class InternService : IInternService
     {
+        private readonly IGeneralRepository<Intern> _internRepository;
         private readonly IUnitOfWork _unitOfWork;
 
-        public InternService(IUnitOfWork unitOfWork)
+        public InternService(
+            IGeneralRepository<Intern> internRepository,
+            IUnitOfWork unitOfWork)
         {
+            _internRepository = internRepository;
             _unitOfWork = unitOfWork;
         }
 
         public async Task<IEnumerable<InternDto>> GetAllAsync()
         {
-            var interns = await _unitOfWork.Interns
+            var interns = await _internRepository
                 .GetTable()
                 .Include(i => i.Track)
                 .ToListAsync()
@@ -34,8 +38,7 @@ namespace LMS___Mini_Version.Services.Implementations
 
         public async Task<InternDto?> GetByIdAsync(int id)
         {
-            // [Trap 4 Fix] Use IQueryable + Include to load Track name in the same SQL query
-            var intern = await _unitOfWork.Interns
+            var intern = await _internRepository
                 .GetTable()
                 .Include(i => i.Track)
                 .FirstOrDefaultAsync(i => i.Id == id)
@@ -46,7 +49,7 @@ namespace LMS___Mini_Version.Services.Implementations
 
         public async Task<InternDto> CreateAsync(InternDto dto)
         {
-            var entity = new Domain.Entities.Intern
+            var entity = new Intern
             {
                 FullName = dto.FullName,
                 Email = dto.Email,
@@ -55,13 +58,17 @@ namespace LMS___Mini_Version.Services.Implementations
                 TrackId = dto.TrackId
             };
 
-            _unitOfWork.Interns.Add(entity);
+            _internRepository.Add(entity);
+
+            // Save so EF populates entity.Id with the DB-generated value
+            await _unitOfWork.CompleteAsync().ConfigureAwait(false);
+
             return entity.ToDto();
         }
 
         public async Task<bool> UpdateAsync(int id, InternDto dto)
         {
-            var intern = await _unitOfWork.Interns.GetByIdAsync(id).ConfigureAwait(false);
+            var intern = await _internRepository.GetByIdAsync(id).ConfigureAwait(false);
             if (intern == null) return false;
 
             intern.FullName = dto.FullName;
@@ -70,16 +77,18 @@ namespace LMS___Mini_Version.Services.Implementations
             intern.Status = dto.Status;
             intern.TrackId = dto.TrackId;
 
-            _unitOfWork.Interns.Update(intern);
+            _internRepository.Update(intern);
+            await _unitOfWork.CompleteAsync().ConfigureAwait(false);
             return true;
         }
 
         public async Task<bool> DeleteAsync(int id)
         {
-            var intern = await _unitOfWork.Interns.GetByIdAsync(id).ConfigureAwait(false);
+            var intern = await _internRepository.GetByIdAsync(id).ConfigureAwait(false);
             if (intern == null) return false;
 
-            _unitOfWork.Interns.Delete(intern);
+            _internRepository.Delete(intern);
+            await _unitOfWork.CompleteAsync().ConfigureAwait(false);
             return true;
         }
     }

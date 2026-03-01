@@ -1,6 +1,5 @@
 ﻿using LMS___Mini_Version.DTOs;
 using LMS___Mini_Version.Mapping;
-using LMS___Mini_Version.Domain.Repositories;
 using LMS___Mini_Version.Services.Interfaces;
 using LMS___Mini_Version.ViewModels.Track;
 using Microsoft.AspNetCore.Mvc;
@@ -8,10 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 namespace LMS___Mini_Version.Controllers
 {
     /// <summary>
-    /// [Trap 1 Fix] This controller NO LONGER injects AppDbContext.
-    ///              It depends only on ITrackService and IUnitOfWork (abstractions).
+    /// [Trap 1 Fix] This controller depends only on ITrackService (abstraction).
+    /// [SRP Fix] No longer injects IUnitOfWork — the Service owns its own CRUD transactions.
     /// [Trap 2 Fix] All responses use ViewModels; all inputs use ViewModels.
-    ///              The domain entity "Track" is never exposed to the client.
     /// [Trap 3 Fix] Every action is async Task — no synchronous blocking.
     /// [Trap 5 Fix] No business logic in the controller — all delegated to TrackService.
     /// </summary>
@@ -20,12 +18,10 @@ namespace LMS___Mini_Version.Controllers
     public class TrackController : ControllerBase
     {
         private readonly ITrackService _trackService;
-        private readonly IUnitOfWork _unitOfWork;
 
-        public TrackController(ITrackService trackService, IUnitOfWork unitOfWork)
+        public TrackController(ITrackService trackService)
         {
             _trackService = trackService;
-            _unitOfWork = unitOfWork;
         }
 
         [HttpGet]
@@ -56,8 +52,7 @@ namespace LMS___Mini_Version.Controllers
             };
 
             var created = await _trackService.CreateAsync(dto).ConfigureAwait(false);
-            await _unitOfWork.CompleteAsync().ConfigureAwait(false);
-
+            // No CompleteAsync here — the Service saves and returns DTO with correct Id
             return Ok(created.ToSummaryViewModel());
         }
 
@@ -75,7 +70,7 @@ namespace LMS___Mini_Version.Controllers
             var updated = await _trackService.UpdateAsync(id, dto).ConfigureAwait(false);
             if (!updated) return NotFound();
 
-            await _unitOfWork.CompleteAsync().ConfigureAwait(false);
+            // No CompleteAsync here — the Service saves internally
             return NoContent();
         }
 
@@ -85,7 +80,7 @@ namespace LMS___Mini_Version.Controllers
             var deleted = await _trackService.DeleteAsync(id).ConfigureAwait(false);
             if (!deleted) return NotFound();
 
-            await _unitOfWork.CompleteAsync().ConfigureAwait(false);
+            // No CompleteAsync here — the Service saves internally
             return NoContent();
         }
     }

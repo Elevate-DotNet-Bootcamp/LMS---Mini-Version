@@ -9,21 +9,29 @@ using Microsoft.EntityFrameworkCore;
 namespace LMS___Mini_Version.Services.Implementations
 {
     /// <summary>
-    /// [Trap 5 Fix] Single-entity Steps for Enrollment.
-    /// [Trap 6 Fix] Only stages changes — no SaveChanges. The Mediator commits via UoW.
+    /// [SRP Fix] Injects IGeneralRepository&lt;Enrollment&gt; and IUnitOfWork directly.
+    /// 
+    /// Mediator-coordinated methods (CreateEnrollmentAsync, UpdateStatusAsync, UpdateTrackAsync)
+    /// only STAGE changes — the Mediator calls UoW.CompleteAsync() at the end for atomicity.
+    /// 
+    /// Read methods are unaffected.
     /// </summary>
     public class EnrollmentService : IEnrollmentService
     {
+        private readonly IGeneralRepository<Enrollment> _enrollmentRepository;
         private readonly IUnitOfWork _unitOfWork;
 
-        public EnrollmentService(IUnitOfWork unitOfWork)
+        public EnrollmentService(
+            IGeneralRepository<Enrollment> enrollmentRepository,
+            IUnitOfWork unitOfWork)
         {
+            _enrollmentRepository = enrollmentRepository;
             _unitOfWork = unitOfWork;
         }
 
         public async Task<IEnumerable<EnrollmentDto>> GetAllAsync()
         {
-            var enrollments = await _unitOfWork.Enrollments
+            var enrollments = await _enrollmentRepository
                 .GetTable()
                 .Include(e => e.Intern)
                 .Include(e => e.Track)
@@ -35,7 +43,7 @@ namespace LMS___Mini_Version.Services.Implementations
 
         public async Task<EnrollmentDto?> GetByIdAsync(int id)
         {
-            var enrollment = await _unitOfWork.Enrollments
+            var enrollment = await _enrollmentRepository
                 .GetTable()
                 .Include(e => e.Intern)
                 .Include(e => e.Track)
@@ -48,7 +56,7 @@ namespace LMS___Mini_Version.Services.Implementations
         /// <summary>
         /// Stages a new Enrollment entity in the Change Tracker.
         /// Does NOT call SaveChanges — the Mediator will call UoW.CompleteAsync()
-        /// after all steps (enrollment + payment) are staged.
+        /// after all steps (enrollment + payment) are staged for atomicity.
         /// </summary>
         public async Task<EnrollmentDto> CreateEnrollmentAsync(CreateEnrollmentDto dto)
         {
@@ -60,13 +68,13 @@ namespace LMS___Mini_Version.Services.Implementations
                 Status = EnrollmentStatus.Pending
             };
 
-            _unitOfWork.Enrollments.Add(entity);
+            _enrollmentRepository.Add(entity);
             return entity.ToDto();
         }
 
         public async Task<IEnumerable<EnrollmentDto>> GetByInternAsync(int internId)
         {
-            var enrollments = await _unitOfWork.Enrollments
+            var enrollments = await _enrollmentRepository
                 .GetTable()
                 .Include(e => e.Track)
                 .Include(e => e.Intern)
@@ -75,6 +83,34 @@ namespace LMS___Mini_Version.Services.Implementations
                 .ConfigureAwait(false);
 
             return enrollments.Select(e => e.ToDto());
+        }
+
+        /// <summary>
+        /// Atomic Step: updates the enrollment status in the Change Tracker.
+        /// No SaveChanges — the Mediator commits via UoW.
+        /// </summary>
+        public async Task<bool> UpdateStatusAsync(int enrollmentId, EnrollmentStatus newStatus)
+        {
+            var enrollment = await _enrollmentRepository.GetByIdAsync(enrollmentId).ConfigureAwait(false);
+            if (enrollment == null) return false;
+
+            enrollment.Status = newStatus;
+            _enrollmentRepository.Update(enrollment);
+            return true;
+        }
+
+        /// <summary>
+        /// Atomic Step: moves the enrollment to a new track in the Change Tracker.
+        /// No SaveChanges — the Mediator commits via UoW.
+        /// </summary>
+        public async Task<bool> UpdateTrackAsync(int enrollmentId, int newTrackId)
+        {
+            var enrollment = await _enrollmentRepository.GetByIdAsync(enrollmentId).ConfigureAwait(false);
+            if (enrollment == null) return false;
+
+            enrollment.TrackId = newTrackId;
+            _enrollmentRepository.Update(enrollment);
+            return true;
         }
     }
 }

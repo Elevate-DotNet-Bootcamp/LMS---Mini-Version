@@ -15,5 +15,17 @@ namespace LMS___Mini_Version.Services.Interfaces
         /// Does NOT call SaveChanges — committed atomically by UoW.
         /// </summary>
         Task<PaymentDto> CreatePaymentAsync(PaymentDto dto);
+
+        /// <summary>
+        /// Atomic Step: Marks the payment as Refunded.
+        /// Staged only — no SaveChanges.
+        /// </summary>
+        Task<bool> RefundPaymentAsync(int enrollmentId);
+
+        /// <summary>
+        /// Atomic Step: Updates the payment amount (e.g., when transferring to a track with different fees).
+        /// Staged only — no SaveChanges.
+        /// </summary>
+        Task<bool> UpdatePaymentAmountAsync(int enrollmentId, decimal newAmount);
     }
 }

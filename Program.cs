@@ -38,7 +38,11 @@ namespace LMS___Mini_Version
 
             // ─── Mediators (Action Coordinators) ──────────────────────────
             // [Trap 5 + 6 Fix] Multi-step actions are orchestrated here.
+            // ⚠️ [THE FINAL TRAP] Notice how every new action = another registration.
+            //     This is the "Mediator Explosion" anti-pattern. The real fix is CQRS (MediatR).
             builder.Services.AddScoped<EnrollInternMediator>();
+            builder.Services.AddScoped<CancelEnrollmentMediator>();
+            builder.Services.AddScoped<TransferEnrollmentMediator>();
 
             var app = builder.Build();
 
