@@ -1,6 +1,7 @@
 using LMS___Mini_Version.Domain.Enums;
 using LMS___Mini_Version.Domain.Repositories;
 using LMS___Mini_Version.DTOs;
+using LMS___Mini_Version.Mapping;
 using LMS___Mini_Version.Services.Interfaces;
 
 namespace LMS___Mini_Version.Mediators
@@ -77,23 +78,27 @@ namespace LMS___Mini_Version.Mediators
             // Step 4: Create enrollment (staged in Change Tracker, NOT saved yet)
             var enrollment = await _enrollmentService.CreateEnrollmentAsync(dto).ConfigureAwait(false);
 
-            // Step 5: If the track has fees, create a payment record (also staged, NOT saved)
+            // Step 5: Save the enrollment first so it gets a real ID from the database.
+            // Without this, the Payment's EnrollmentId would be 0 (invalid FK).
+            await _unitOfWork.CompleteAsync().ConfigureAwait(false);
+
+            // Step 6: If the track has fees, create a payment record using the real enrollment ID
             PaymentDto? payment = null;
             if (track.Fees > 0)
             {
                 payment = await _paymentService.CreatePaymentAsync(new PaymentDto
                 {
-                    EnrollmentId = 0, // Will be resolved by EF after SaveChanges
+                    EnrollmentId = enrollment.Id, // Now has the real ID from the database
                     Amount = track.Fees,
                     Method = PaymentMethod.Cash,
                     Status = PaymentStatus.Pending
                 }).ConfigureAwait(false);
             }
 
-            // Step 6: ATOMIC COMMIT — everything saved in one transaction
+            // Step 7: COMMIT the payment record
             await _unitOfWork.CompleteAsync().ConfigureAwait(false);
 
-            return EnrollmentResultDto.Succeed(enrollment, payment);
+            return EnrollmentResultDto.Succeed(enrollment.ToDto(), payment);
         }
     }
 

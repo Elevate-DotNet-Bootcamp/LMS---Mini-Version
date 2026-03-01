@@ -1,3 +1,4 @@
+using LMS___Mini_Version.Domain.Entities;
 using LMS___Mini_Version.Domain.Enums;
 using LMS___Mini_Version.DTOs;
 
@@ -13,9 +14,10 @@ namespace LMS___Mini_Version.Services.Interfaces
 
         /// <summary>
         /// Creates the enrollment entity in memory (staged in Change Tracker).
+        /// Returns the tracked entity so the Mediator can read the real Id after SaveChanges.
         /// Does NOT call SaveChanges — that's the Mediator's job via UoW.
         /// </summary>
-        Task<EnrollmentDto> CreateEnrollmentAsync(CreateEnrollmentDto dto);
+        Task<Enrollment> CreateEnrollmentAsync(CreateEnrollmentDto dto);
 
         Task<IEnumerable<EnrollmentDto>> GetByInternAsync(int internId);
 

@@ -55,10 +55,11 @@ namespace LMS___Mini_Version.Services.Implementations
 
         /// <summary>
         /// Stages a new Enrollment entity in the Change Tracker.
+        /// Returns the tracked entity so the Mediator can read the real Id after SaveChanges.
         /// Does NOT call SaveChanges — the Mediator will call UoW.CompleteAsync()
         /// after all steps (enrollment + payment) are staged for atomicity.
         /// </summary>
-        public async Task<EnrollmentDto> CreateEnrollmentAsync(CreateEnrollmentDto dto)
+        public async Task<Enrollment> CreateEnrollmentAsync(CreateEnrollmentDto dto)
         {
             var entity = new Enrollment
             {
@@ -69,7 +70,7 @@ namespace LMS___Mini_Version.Services.Implementations
             };
 
             _enrollmentRepository.Add(entity);
-            return entity.ToDto();
+            return entity; // Return the tracked entity, not a DTO
         }
 
         public async Task<IEnumerable<EnrollmentDto>> GetByInternAsync(int internId)
