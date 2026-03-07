@@ -1,86 +1,68 @@
-﻿using LMS___Mini_Version.DTOs;
-using LMS___Mini_Version.Mapping;
-using LMS___Mini_Version.Services.Interfaces;
+﻿using LMS___Mini_Version.Features.Tracks.Commands;
+using LMS___Mini_Version.Features.Tracks.Queries;
 using LMS___Mini_Version.ViewModels.Track;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LMS___Mini_Version.Controllers
 {
     /// <summary>
-    /// [Trap 1 Fix] This controller depends only on ITrackService (abstraction).
-    /// [SRP Fix] No longer injects IUnitOfWork — the Service owns its own CRUD transactions.
-    /// [Trap 2 Fix] All responses use ViewModels; all inputs use ViewModels.
-    /// [Trap 3 Fix] Every action is async Task — no synchronous blocking.
-    /// [Trap 5 Fix] No business logic in the controller — all delegated to TrackService.
+    /// [CQRS Fix] This controller injects ONLY IMediator.
+    /// All operations are dispatched as Commands (writes) or Queries (reads).
+    /// No Services, no Repositories, no UnitOfWork — just a single mediator.
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class TrackController : ControllerBase
     {
-        private readonly ITrackService _trackService;
+        private readonly IMediator _mediator;
 
-        public TrackController(ITrackService trackService)
+        public TrackController(IMediator mediator)
         {
-            _trackService = trackService;
+            _mediator = mediator;
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<TrackSummaryViewModel>>> GetAll()
         {
-            var dtos = await _trackService.GetAllAsync().ConfigureAwait(false);
-            var viewModels = dtos.Select(d => d.ToSummaryViewModel());
-            return Ok(viewModels);
+            var result = await _mediator.Send(new GetAllTracksQuery()).ConfigureAwait(false);
+            return Ok(result);
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<TrackDetailViewModel>> GetById(int id)
         {
-            var dto = await _trackService.GetByIdAsync(id).ConfigureAwait(false);
-            if (dto == null) return NotFound();
-            return Ok(dto.ToDetailViewModel());
+            var result = await _mediator.Send(new GetTrackByIdQuery(id)).ConfigureAwait(false);
+            if (result == null) return NotFound();
+            return Ok(result);
         }
 
         [HttpPost]
         public async Task<ActionResult<TrackSummaryViewModel>> Create(CreateTrackViewModel vm)
         {
-            var dto = new TrackDto
-            {
-                Name = vm.Name,
-                Fees = vm.Fees,
-                IsActive = vm.IsActive,
-                MaxCapacity = vm.MaxCapacity
-            };
+            var result = await _mediator.Send(new CreateTrackCommand(
+                vm.Name, vm.Fees, vm.IsActive, vm.MaxCapacity
+            )).ConfigureAwait(false);
 
-            var created = await _trackService.CreateAsync(dto).ConfigureAwait(false);
-            // No CompleteAsync here — the Service saves and returns DTO with correct Id
-            return Ok(created.ToSummaryViewModel());
+            return Ok(result);
         }
 
         [HttpPut("{id}")]
         public async Task<ActionResult> Update(int id, UpdateTrackViewModel vm)
         {
-            var dto = new TrackDto
-            {
-                Name = vm.Name,
-                Fees = vm.Fees,
-                IsActive = vm.IsActive,
-                MaxCapacity = vm.MaxCapacity
-            };
+            var updated = await _mediator.Send(new UpdateTrackCommand(
+                id, vm.Name, vm.Fees, vm.IsActive, vm.MaxCapacity
+            )).ConfigureAwait(false);
 
-            var updated = await _trackService.UpdateAsync(id, dto).ConfigureAwait(false);
             if (!updated) return NotFound();
-
-            // No CompleteAsync here — the Service saves internally
             return NoContent();
         }
 
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(int id)
         {
-            var deleted = await _trackService.DeleteAsync(id).ConfigureAwait(false);
+            var deleted = await _mediator.Send(new DeleteTrackCommand(id)).ConfigureAwait(false);
             if (!deleted) return NotFound();
-
-            // No CompleteAsync here — the Service saves internally
             return NoContent();
         }
     }

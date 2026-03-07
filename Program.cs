@@ -1,9 +1,9 @@
 using LMS___Mini_Version.Domain.Repositories;
 using LMS___Mini_Version.Infrastructure.Repositories;
-using LMS___Mini_Version.Mediators;
 using LMS___Mini_Version.Persistence;
 using LMS___Mini_Version.Services.Implementations;
 using LMS___Mini_Version.Services.Interfaces;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace LMS___Mini_Version
@@ -24,25 +24,18 @@ namespace LMS___Mini_Version
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             // ─── Repository & Unit of Work ────────────────────────────────
-            // [Trap 1 + 6 Fix] Controllers never touch DbContext.
-            // All data access goes through IUnitOfWork → IGeneralRepository<T>.
             builder.Services.AddScoped(typeof(IGeneralRepository<>), typeof(GeneralRepository<>));
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-            // ─── Services (Single-Entity Steps) ───────────────────────────
-            // [Trap 5 Fix] Business logic lives here, not in Controllers.
-            builder.Services.AddScoped<ITrackService, TrackService>();
-            builder.Services.AddScoped<IInternService, InternService>();
-            builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
-            builder.Services.AddScoped<IPaymentService, PaymentService>();
+            // ─── MediatR (CQRS) ──────────────────────────────────────────
+            // Replaces ALL manual Mediators and refactored Services.
+            // MediatR auto-discovers all IRequestHandler<,> implementations in this assembly.
 
-            // ─── Mediators (Action Coordinators) ──────────────────────────
-            // [Trap 5 + 6 Fix] Multi-step actions are orchestrated here.
-            // ⚠️ [THE FINAL TRAP] Notice how every new action = another registration.
-            //     This is the "Mediator Explosion" anti-pattern. The real fix is CQRS (MediatR).
-            builder.Services.AddScoped<EnrollInternMediator>();
-            builder.Services.AddScoped<CancelEnrollmentMediator>();
-            builder.Services.AddScoped<TransferEnrollmentMediator>();
+            builder.Services.AddMediatR(typeof(Program).Assembly);
+            // ─── Remaining Services (not yet migrated to CQRS) ───────────
+            // InternService and PaymentService are still used by some handlers.
+            builder.Services.AddScoped<IInternService, InternService>();
+            builder.Services.AddScoped<IPaymentService, PaymentService>();
 
             var app = builder.Build();
 
