@@ -66,4 +66,3 @@ Update-Database
 ## 👨‍🏫 Mentorship
 
 This project is maintained by **Amr Mohamed** , **Seif Emam**, . The goal is to evolve this code from a "Dirty" state to a "Clean Architecture" state throughout the bootcamp.
-
