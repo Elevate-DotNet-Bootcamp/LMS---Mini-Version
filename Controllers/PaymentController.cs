@@ -1,39 +1,42 @@
-using LMS___Mini_Version.Mapping;
-using LMS___Mini_Version.Services.Interfaces;
+using LMS___Mini_Version.Features.Payments.Queries;
 using LMS___Mini_Version.ViewModels.Payment;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LMS___Mini_Version.Controllers
 {
     /// <summary>
-    /// Read-only controller for Payment data.
-    /// Payments are created through the EnrollInternMediator — not directly.
+    /// [CQRS Fix] Read-only controller for Payment data.
+    /// Injects ONLY IMediator — no more IPaymentService.
+    /// Payments are created through the EnrollInternOrchestrator — not directly.
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class PaymentController : ControllerBase
     {
-        private readonly IPaymentService _paymentService;
+        private readonly IMediator _mediator;
 
-        public PaymentController(IPaymentService paymentService)
+        public PaymentController(IMediator mediator)
         {
-            _paymentService = paymentService;
+            _mediator = mediator;
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PaymentViewModel>>> GetAll()
         {
-            var dtos = await _paymentService.GetAllAsync().ConfigureAwait(false);
-            var viewModels = dtos.Select(d => d.ToViewModel());
-            return Ok(viewModels);
+            var result = await _mediator.Send(new GetAllPaymentsQuery()).ConfigureAwait(false);
+            return Ok(result);
         }
 
         [HttpGet("enrollment/{enrollmentId}")]
         public async Task<ActionResult<PaymentViewModel>> GetByEnrollment(int enrollmentId)
         {
-            var dto = await _paymentService.GetByEnrollmentAsync(enrollmentId).ConfigureAwait(false);
-            if (dto == null) return NotFound();
-            return Ok(dto.ToViewModel());
+            var result = await _mediator
+                .Send(new GetPaymentByEnrollmentQuery(enrollmentId))
+                .ConfigureAwait(false);
+
+            if (result == null) return NotFound();
+            return Ok(result);
         }
     }
 }

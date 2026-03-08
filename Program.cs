@@ -1,11 +1,8 @@
 using LMS___Mini_Version.Domain.Repositories;
 using LMS___Mini_Version.Infrastructure.Repositories;
 using LMS___Mini_Version.Persistence;
-using LMS___Mini_Version.Services.Implementations;
-using LMS___Mini_Version.Services.Interfaces;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
-
+using MediatR;
 namespace LMS___Mini_Version
 {
     public class Program
@@ -28,14 +25,10 @@ namespace LMS___Mini_Version
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             // ─── MediatR (CQRS) ──────────────────────────────────────────
-            // Replaces ALL manual Mediators and refactored Services.
+            // All business logic now lives in Commands, Queries, Handlers, and Orchestrators.
             // MediatR auto-discovers all IRequestHandler<,> implementations in this assembly.
-
+            // No more manual Service or Mediator registrations needed!
             builder.Services.AddMediatR(typeof(Program).Assembly);
-            // ─── Remaining Services (not yet migrated to CQRS) ───────────
-            // InternService and PaymentService are still used by some handlers.
-            builder.Services.AddScoped<IInternService, InternService>();
-            builder.Services.AddScoped<IPaymentService, PaymentService>();
 
             var app = builder.Build();
 
