@@ -58,8 +58,13 @@ namespace LMS___Mini_Version.Services.Implementations
             // ══════════════════════════════════════════════════════════
             // var track = await _trackRepository.GetByIdAsync(id).ConfigureAwait(false);
             // return track?.ToDto();
+            //GetTrackByIdQuery
+            //GetTrackByIdQueryHandler
             throw new NotImplementedException("This method has been migrated to CQRS. Use GetTrackByIdQuery via MediatR.");
         }
+
+        //    public record GetTrackByIdQuery(int Id) : IRequest<TrackDetailViewModel?>;
+
 
         public async Task<TrackDto> CreateAsync(TrackDto dto)
         {

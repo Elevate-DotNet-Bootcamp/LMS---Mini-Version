@@ -1,5 +1,8 @@
+using Azure.Core;
 using LMS___Mini_Version.Domain.Entities;
 using LMS___Mini_Version.Domain.Repositories;
+using LMS___Mini_Version.DTOs;
+using LMS___Mini_Version.Features.Tracks.Handlers;
 using LMS___Mini_Version.Features.Tracks.Queries;
 using LMS___Mini_Version.Mapping;
 using LMS___Mini_Version.ViewModels.Track;
@@ -16,27 +19,49 @@ namespace LMS___Mini_Version.Features.Tracks.Handlers
     ///   - Map using .ToDto().ToDetailViewModel()
     ///   - Return null if not found
     /// </summary>
-    public class GetTrackByIdQueryHandler
-        : IRequestHandler<GetTrackByIdQuery, TrackDetailViewModel?>
-    {
-        private readonly IGeneralRepository<Track> _trackRepository;
+    public class GetTrackByIdQueryHandler : IRequestHandler<GetTrackByIdQuery, TrackDto>
 
+    {
+        private IGeneralRepository<Track> _trackRepository;
+        
         public GetTrackByIdQueryHandler(IGeneralRepository<Track> trackRepository)
         {
             _trackRepository = trackRepository;
         }
-
-        public async Task<TrackDetailViewModel?> Handle(
-            GetTrackByIdQuery request, CancellationToken cancellationToken)
+        public async Task<TrackDto> Handle(GetTrackByIdQuery request, CancellationToken cancellationToken)
         {
-            // ╔══════════════════════════════════════════════════════════════╗
-            // ║  🎯 ASSIGNMENT: Implement this handler                      ║
-            // ║                                                              ║
-            // ║  Find a Track by request.Id                                 ║
-            // ║  Map Track entity → TrackDto → TrackDetailViewModel         ║
-            // ║  Return null if not found                                    ║
-            // ╚══════════════════════════════════════════════════════════════╝
-            throw new NotImplementedException("TODO: Implement this handler for the CQRS assignment");
+            var track = await _trackRepository.GetByIdAsync(request.Id);
+            if (track == null) return null;
+
+            var trackDTO = new TrackDto
+            {
+                Id = track.Id,
+                Name = track.Name,
+                Fees = track.Fees,
+                IsActive = track.IsActive,
+                MaxCapacity = track.MaxCapacity,
+                CurrentEnrollmentCount = track.Enrollments?.Count ?? 0
+            };
+            return trackDTO;
         }
     }
 }
+#region 
+//answer
+
+//: IRequestHandler<GetTrackByIdQuery, TrackDetailViewModel?>
+
+//private readonly IGeneralRepository<Track> _trackRepository;
+
+//public GetTrackByIdQueryHandler(IGeneralRepository<Track> trackRepository)
+//{
+//    _trackRepository = trackRepository;
+//}
+
+//var track = await _trackRepository.GetByIdAsync(request.Id).ConfigureAwait(false);
+//if (track == null) return null;
+
+
+
+//return trackDetailViewModel;
+#endregion

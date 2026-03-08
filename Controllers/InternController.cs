@@ -44,11 +44,13 @@ namespace LMS___Mini_Version.Controllers
             // 1) Implement the business logic inside GetInternByIdQueryHandler
             // 2) The controller is already wired — just fix the handler!
             // ══════════════════════════════════════════════════════════════
-            var result = await _mediator.Send(new GetInternByIdQuery(id)).ConfigureAwait(false);
-            if (result == null) return NotFound();
-            return Ok(result);
+            throw new NotImplementedException();
         }
-
+        #region
+        //var result = await _mediator.Send(new GetInternByIdQuery(id)).ConfigureAwait(false);
+        //if (result == null) return NotFound();
+        //return Ok(result);
+        #endregion
         [HttpPost]
         public async Task<ActionResult<InternSummaryViewModel>> Create(CreateInternViewModel vm)
         {

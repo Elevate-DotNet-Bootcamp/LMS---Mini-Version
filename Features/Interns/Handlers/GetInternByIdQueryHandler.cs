@@ -1,5 +1,6 @@
 using LMS___Mini_Version.Domain.Entities;
 using LMS___Mini_Version.Domain.Repositories;
+using LMS___Mini_Version.Features.Interns.Handlers;
 using LMS___Mini_Version.Features.Interns.Queries;
 using LMS___Mini_Version.Mapping;
 using LMS___Mini_Version.ViewModels.Intern;
@@ -19,27 +20,28 @@ namespace LMS___Mini_Version.Features.Interns.Handlers
     ///   - Map using .ToDto().ToDetailViewModel()
     ///   - Return null if not found
     /// </summary>
-    public class GetInternByIdQueryHandler
-        : IRequestHandler<GetInternByIdQuery, InternDetailViewModel?>
-    {
-        private readonly IGeneralRepository<Intern> _internRepository;
+    public class GetInternByIdQueryHandler {
 
-        public GetInternByIdQueryHandler(IGeneralRepository<Intern> internRepository)
-        {
-            _internRepository = internRepository;
-        }
-
-        public async Task<InternDetailViewModel?> Handle(
-            GetInternByIdQuery request, CancellationToken cancellationToken)
-        {
-            // ╔══════════════════════════════════════════════════════════════╗
-            // ║  🎯 ASSIGNMENT: Implement this handler                      ║
-            // ║                                                              ║
-            // ║  Find an Intern by request.Id (include Track)               ║
-            // ║  Map Intern entity → InternDto → InternDetailViewModel      ║
-            // ║  Return null if not found                                    ║
-            // ╚══════════════════════════════════════════════════════════════╝
-            throw new NotImplementedException("TODO: Implement this handler for the CQRS assignment");
-        }
+        // ╔══════════════════════════════════════════════════════════════╗
+        // ║  🎯 ASSIGNMENT: Implement this handler                      ║
+        // ║                                                              ║
+        // ║  Find an Intern by request.Id (include Track)               ║
+        // ║  Map Intern entity → InternDto → InternDetailViewModel      ║
+        // ║  Return null if not found                                    ║
+        // ╚══════════════════════════════════════════════════════════════╝
     }
 }
+#region
+// : IRequestHandler<GetInternByIdQuery, InternDetailViewModel?>
+//    {
+//        private readonly IGeneralRepository<Intern> _internRepository;
+
+//public GetInternByIdQueryHandler(IGeneralRepository<Intern> internRepository)
+//{
+//    _internRepository = internRepository;
+//}
+
+//public async Task<InternDetailViewModel?> Handle(
+//    GetInternByIdQuery request, CancellationToken cancellationToken)
+//{
+#endregion

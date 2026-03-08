@@ -17,26 +17,34 @@ namespace LMS___Mini_Version.Features.Tracks.Handlers
     ///   - Use .ToListAsync(cancellationToken)
     ///   - Map using .ToDto().ToSummaryViewModel()
     /// </summary>
-    public class GetActiveTracksQueryHandler
-        : IRequestHandler<GetActiveTracksQuery, IEnumerable<TrackSummaryViewModel>>
+    public class GetActiveTracksQueryHandler : IRequestHandler<GetActiveTracksQuery, IEnumerable<TrackSummaryViewModel>>
     {
+        // ╔══════════════════════════════════════════════════════════════╗
+        // ║  🎯 ASSIGNMENT: Implement this handler                      ║
+        // ║                                                              ║
+        // ║  Return all tracks where IsActive == true                    ║
+        // ║  Map each Track entity → TrackDto → TrackSummaryViewModel   ║
+        // ╚══════════════════════════════════════════════════════════════╝
         private readonly IGeneralRepository<Track> _trackRepository;
-
         public GetActiveTracksQueryHandler(IGeneralRepository<Track> trackRepository)
         {
             _trackRepository = trackRepository;
         }
 
-        public async Task<IEnumerable<TrackSummaryViewModel>> Handle(
-            GetActiveTracksQuery request, CancellationToken cancellationToken)
+        #region
+        //        : IRequestHandler<GetActiveTracksQuery, IEnumerable<TrackSummaryViewModel>>
+        //{
+        //    private readonly IGeneralRepository<Track> _trackRepository;
+
+        //public GetActiveTracksQueryHandler(IGeneralRepository<Track> trackRepository)
+        //{
+        //    _trackRepository = trackRepository;
+        //}
+        #endregion
+        public Task<IEnumerable<TrackSummaryViewModel>> Handle(GetActiveTracksQuery request, CancellationToken cancellationToken)
         {
-            // ╔══════════════════════════════════════════════════════════════╗
-            // ║  🎯 ASSIGNMENT: Implement this handler                      ║
-            // ║                                                              ║
-            // ║  Return all tracks where IsActive == true                    ║
-            // ║  Map each Track entity → TrackDto → TrackSummaryViewModel   ║
-            // ╚══════════════════════════════════════════════════════════════╝
-            throw new NotImplementedException("TODO: Implement this handler for the CQRS assignment");
+            throw new NotImplementedException("Implement GetActiveTracksQueryHandler to return active tracks as TrackSummaryViewModel");
+
         }
     }
 }

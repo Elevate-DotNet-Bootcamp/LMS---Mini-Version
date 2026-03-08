@@ -39,11 +39,14 @@ namespace LMS___Mini_Version.Controllers
             // 1) Implement the business logic inside GetTrackByIdQueryHandler
             // 2) The controller is already wired — just fix the handler!
             // ══════════════════════════════════════════════════════════════
-            var result = await _mediator.Send(new GetTrackByIdQuery(id)).ConfigureAwait(false);
-            if (result == null) return NotFound();
-            return Ok(result);
+            var trackdto = await _mediator.Send(new GetTrackByIdQuery(id));
+            return trackdto == null ? NotFound() : Ok(trackdto);
         }
-
+        #region answer
+        //var result = await _mediator.Send(new GetTrackByIdQuery(id)).ConfigureAwait(false);
+        //if (result == null) return NotFound();
+        //return Ok(result);
+        #endregion
         [HttpGet("active")]
         public async Task<ActionResult<IEnumerable<TrackSummaryViewModel>>> GetActiveTracks()
         {
@@ -57,10 +60,13 @@ namespace LMS___Mini_Version.Controllers
             // But first, implement the handler logic inside
             // GetActiveTracksQueryHandler to query only active tracks.
             // ══════════════════════════════════════════════════════════════
-            var result = await _mediator.Send(new GetActiveTracksQuery()).ConfigureAwait(false);
-            return Ok(result);
+            var activeTracks = await _mediator.Send(new GetActiveTracksQuery());
+            return Ok(activeTracks);
         }
-
+        #region
+        //var result = await _mediator.Send(new GetActiveTracksQuery()).ConfigureAwait(false);
+        //return Ok(result);
+        #endregion
         [HttpPost]
         public async Task<ActionResult<TrackSummaryViewModel>> Create(CreateTrackViewModel vm)
         {

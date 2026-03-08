@@ -7,4 +7,9 @@ namespace LMS___Mini_Version.Features.Tracks.Queries
     /// [CQRS Assignment] Query to retrieve only the active tracks.
     /// </summary>
     public record GetActiveTracksQuery : IRequest<IEnumerable<TrackSummaryViewModel>>;
+
+
+    #region
+   // : IRequest<IEnumerable<TrackSummaryViewModel>>
+    #endregion
 }

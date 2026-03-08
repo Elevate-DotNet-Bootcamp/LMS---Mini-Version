@@ -24,7 +24,7 @@ namespace LMS___Mini_Version.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PaymentViewModel>>> GetAll()
         {
-            var result = await _mediator.Send(new GetAllPaymentsQuery()).ConfigureAwait(false);
+            var result = await _mediator.Send(new GetAllPaymentsQuery());
             return Ok(result);
         }
 
