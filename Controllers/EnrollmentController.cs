@@ -18,9 +18,9 @@ namespace LMS___Mini_Version.Controllers
             _mediator = mediator;
         }
 
-        // ═══════════════════════════════════════════════════════
+        // ══════════════════════════════════════════════════════
         //  READ ENDPOINTS (dispatched as Queries)
-        // ═══════════════════════════════════════════════════════
+        // ══════════════════════════════════════════════════════
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<EnrollmentViewModel>>> GetAll()
