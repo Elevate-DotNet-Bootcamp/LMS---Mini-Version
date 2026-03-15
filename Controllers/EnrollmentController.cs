@@ -1,8 +1,10 @@
+using LMS___Mini_Version.CQRS.Enrollments.Queries;
 using LMS___Mini_Version.DTOs;
 using LMS___Mini_Version.Mapping;
 using LMS___Mini_Version.Mediators;
 using LMS___Mini_Version.Services.Interfaces;
 using LMS___Mini_Version.ViewModels.Enrollment;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LMS___Mini_Version.Controllers
@@ -17,13 +19,15 @@ namespace LMS___Mini_Version.Controllers
     public class EnrollmentController : ControllerBase
     {
         private readonly IEnrollmentService _enrollmentService;
-        private readonly EnrollInternMediator _mediator;
-
+        private readonly EnrollInternMediator _mmediator;
+        private readonly IMediator _mediator;
         public EnrollmentController(
             IEnrollmentService enrollmentService,
-            EnrollInternMediator mediator)
+            EnrollInternMediator mmediator,
+            IMediator mediator)
         {
             _enrollmentService = enrollmentService;
+            _mmediator = mmediator;
             _mediator = mediator;
         }
 
@@ -61,7 +65,7 @@ namespace LMS___Mini_Version.Controllers
         [HttpPost]
         public async Task<ActionResult<EnrollmentViewModel>> Enroll(EnrollInternViewModel vm)
         {
-            var result = await _mediator.ExecuteAsync(new CreateEnrollmentDto
+            var result = await _mmediator.ExecuteAsync(new CreateEnrollmentDto
             {
                 InternId = vm.InternId,
                 TrackId = vm.TrackId
@@ -73,6 +77,14 @@ namespace LMS___Mini_Version.Controllers
             }
 
             return Ok(result.Enrollment!.ToViewModel());
+        }
+        [HttpGet("by-intern/{id})")]
+        public async Task<ActionResult<IEnumerable<EnrollmentViewModel>>> GetEnrollmentByInternId(int id)
+        {
+            var enrollmentDtos = await _mediator.Send(new GetEnrollmentsByInternQuery(id));
+            var viewModels = enrollmentDtos.Select(s => s.ToViewModel());
+
+            return Ok(viewModels);
         }
     }
 }

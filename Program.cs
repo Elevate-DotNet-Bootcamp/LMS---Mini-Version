@@ -4,6 +4,7 @@ using LMS___Mini_Version.Mediators;
 using LMS___Mini_Version.Persistence;
 using LMS___Mini_Version.Services.Implementations;
 using LMS___Mini_Version.Services.Interfaces;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace LMS___Mini_Version
@@ -21,7 +22,8 @@ namespace LMS___Mini_Version
 
             // ─── Database ─────────────────────────────────────────────────
             builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+                .LogTo(Console.WriteLine,LogLevel.Debug));
 
             // ─── Repository & Unit of Work ────────────────────────────────
             // [Trap 1 + 6 Fix] Controllers never touch DbContext.
@@ -36,9 +38,15 @@ namespace LMS___Mini_Version
             builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
             builder.Services.AddScoped<IPaymentService, PaymentService>();
 
+
+
             // ─── Mediators (Action Coordinators) ──────────────────────────
             // [Trap 5 + 6 Fix] Multi-step actions are orchestrated here.
             builder.Services.AddScoped<EnrollInternMediator>();
+
+
+
+            builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
             var app = builder.Build();
 

@@ -4,6 +4,8 @@ using LMS___Mini_Version.Domain.Repositories;
 using LMS___Mini_Version.Services.Interfaces;
 using LMS___Mini_Version.ViewModels.Track;
 using Microsoft.AspNetCore.Mvc;
+using MediatR;
+using LMS___Mini_Version.CQRS.Tracks.Queries;
 
 namespace LMS___Mini_Version.Controllers
 {
@@ -21,11 +23,13 @@ namespace LMS___Mini_Version.Controllers
     {
         private readonly ITrackService _trackService;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMediator _mediator;
 
-        public TrackController(ITrackService trackService, IUnitOfWork unitOfWork)
+        public TrackController(ITrackService trackService, IUnitOfWork unitOfWork, IMediator mediator)
         {
             _trackService = trackService;
             _unitOfWork = unitOfWork;
+            _mediator = mediator;
         }
 
         [HttpGet]
@@ -36,12 +40,20 @@ namespace LMS___Mini_Version.Controllers
             return Ok(viewModels);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<TrackDetailViewModel>> GetById(int id)
+        //[HttpGet("{id}")]
+        //public async Task<ActionResult<TrackDetailViewModel>> GetById(int id)
+        //{
+        //    var dto = await _trackService.GetByIdAsync(id).ConfigureAwait(false);
+        //    if (dto == null) return NotFound();
+        //    return Ok(dto.ToDetailViewModel());
+        //}
+
+        [HttpGet("ActiveTracks")]
+        public async Task<ActionResult<IEnumerable<TrackDetailViewModel>>> GetActvieTracks()
         {
-            var dto = await _trackService.GetByIdAsync(id).ConfigureAwait(false);
-            if (dto == null) return NotFound();
-            return Ok(dto.ToDetailViewModel());
+            var dtos = await _mediator.Send(new GetActiveTracksQuery());
+
+            return Ok(dtos.Select(d => d.ToDetailViewModel()));
         }
 
         [HttpPost]
@@ -87,6 +99,15 @@ namespace LMS___Mini_Version.Controllers
 
             await _unitOfWork.CompleteAsync().ConfigureAwait(false);
             return NoContent();
+        }
+
+        [HttpGet("NewGetTrack")]
+        public async Task<ActionResult> GetTrackData([FromQuery] int id)
+        {
+            var trackData = await _mediator.Send(new GetTrackByIdQuery(id));
+            var trackViewModel = trackData?.ToDetailViewModel();
+
+            return Ok(trackViewModel);
         }
     }
 }
